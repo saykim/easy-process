@@ -45,14 +45,20 @@ export function ProcessNode({ data, selected }: ProcessNodeProps) {
 
       {/* Node content */}
       <div className="space-y-1">
-        <div className="font-semibold text-gray-900">
+        <div className="font-semibold text-gray-900 border-b border-gray-200 pb-1">
           {nodeData?.name || 'Process'}
         </div>
-        {nodeData?.notes && (
-          <div className="text-xs text-gray-500">{nodeData.notes}</div>
+        {nodeData?.inputs && (
+          <div className="text-xs text-green-600">⬇️ In: {nodeData.inputs}</div>
         )}
         {nodeData?.outputs && (
-          <div className="text-xs text-blue-600">📦 {nodeData.outputs}</div>
+          <div className="text-xs text-blue-600">⬆️ Out: {nodeData.outputs}</div>
+        )}
+        {nodeData?.operation && (
+          <div className="text-xs text-purple-600">⚙️ {nodeData.operation}</div>
+        )}
+        {nodeData?.notes && (
+          <div className="text-xs text-gray-500 italic">{nodeData.notes}</div>
         )}
       </div>
     </div>

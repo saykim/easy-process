@@ -9,10 +9,14 @@ export type DeviceCategory = 'xray' | 'metal' | 'weight';
 // Edge Styles
 export type EdgeStyle = 'solid' | 'dotted' | 'bold';
 
+// Edge Arrow Direction
+export type EdgeArrowType = 'none' | 'forward' | 'backward' | 'both';
+
 // Node Properties
 export interface BaseNodeProps {
   name: string;
   notes?: string;
+  inputs?: string;
   outputs?: string;
   operation?: string;
 }
@@ -45,8 +49,9 @@ export interface CustomNodeData extends Record<string, unknown> {
 // Custom Edge Data
 export interface CustomEdgeData extends Record<string, unknown> {
   style: EdgeStyle;
+  color?: string;
+  arrowType?: EdgeArrowType;
   label?: string;
-  arrow?: boolean;
 }
 
 // Diagram Types

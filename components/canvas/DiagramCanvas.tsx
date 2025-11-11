@@ -18,6 +18,7 @@ import { ProcessNode } from '@/components/nodes/ProcessNode';
 import { DeviceNode } from '@/components/nodes/DeviceNode';
 import { DecisionNode } from '@/components/nodes/DecisionNode';
 import { NoteNode } from '@/components/nodes/NoteNode';
+import { CustomEdge } from '@/components/edges/CustomEdge';
 import { CustomNodeData, DeviceCategory, NodeType } from '@/types';
 import { DEFAULT_NODE_SIZE, DECISION_NODE_SIZE, NOTE_NODE_SIZE } from '@/lib/constants/nodes';
 
@@ -26,6 +27,10 @@ const nodeTypes = {
   device: DeviceNode,
   decision: DecisionNode,
   note: NoteNode,
+} as const;
+
+const edgeTypes = {
+  default: CustomEdge,
 } as const;
 
 function DiagramCanvasInner() {
@@ -168,13 +173,13 @@ function DiagramCanvasInner() {
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes as any}
+        edgeTypes={edgeTypes as any}
         fitView
         snapToGrid
         snapGrid={[15, 15]}
         defaultEdgeOptions={{
-          type: 'smoothstep',
+          type: 'default',
           animated: false,
-          style: { strokeWidth: 2 },
         }}
       >
         <Background color="#aaa" gap={15} />

@@ -54,7 +54,7 @@ export function DeviceNode({ data, selected }: DeviceNodeComponentProps) {
 
       {/* Node content */}
       <div className="space-y-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
           <span className="text-2xl">{categoryInfo.icon}</span>
           <div className="font-semibold text-gray-900">
             {nodeData?.name || categoryInfo.label}
@@ -66,8 +66,17 @@ export function DeviceNode({ data, selected }: DeviceNodeComponentProps) {
         {deviceMeta?.manufacturer && (
           <div className="text-xs text-gray-500">Mfr: {deviceMeta.manufacturer}</div>
         )}
+        {nodeData?.inputs && (
+          <div className="text-xs text-green-600">⬇️ In: {nodeData.inputs}</div>
+        )}
+        {nodeData?.outputs && (
+          <div className="text-xs text-blue-600">⬆️ Out: {nodeData.outputs}</div>
+        )}
+        {nodeData?.operation && (
+          <div className="text-xs text-purple-600">⚙️ {nodeData.operation}</div>
+        )}
         {nodeData?.notes && (
-          <div className="text-xs text-gray-500">{nodeData.notes}</div>
+          <div className="text-xs text-gray-500 italic">{nodeData.notes}</div>
         )}
       </div>
     </div>

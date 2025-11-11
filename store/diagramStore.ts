@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Node, Edge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Connection } from '@xyflow/react';
 import { CustomNodeData, CustomEdgeData, DiagramType, EdgeStyle } from '@/types';
-import { DEFAULT_EDGE_STYLE } from '@/lib/constants/edges';
+import { DEFAULT_EDGE_STYLE, DEFAULT_EDGE_COLOR, DEFAULT_EDGE_ARROW_TYPE } from '@/lib/constants/edges';
 
 interface DiagramState {
   // Diagram metadata
@@ -110,7 +110,8 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       type: 'default',
       data: {
         style,
-        arrow: true,
+        color: DEFAULT_EDGE_COLOR,
+        arrowType: DEFAULT_EDGE_ARROW_TYPE,
       },
     };
 

@@ -21,8 +21,8 @@ import { DecisionNode } from '@/components/nodes/DecisionNode';
 import { NoteNode } from '@/components/nodes/NoteNode';
 import { CustomEdge } from '@/components/edges/CustomEdge';
 import { QuickNodeMenu } from '@/components/canvas/QuickNodeMenu';
-import { CustomNodeData, DeviceCategory, NodeType } from '@/types';
-import { DEFAULT_NODE_SIZE, DECISION_NODE_SIZE, NOTE_NODE_SIZE } from '@/lib/constants/nodes';
+import { DeviceCategory, NodeType } from '@/types';
+import { createNode } from '@/lib/utils/nodeFactory';
 
 const nodeTypes = {
   process: ProcessNode,
@@ -37,7 +37,7 @@ const edgeTypes = {
 
 function DiagramCanvasInner() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition, getNode } = useReactFlow();
+  const { screenToFlowPosition } = useReactFlow();
   const [connectingNodeId, setConnectingNodeId] = useState<OnConnectStartParams | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [pendingNodePosition, setPendingNodePosition] = useState<{ x: number; y: number } | null>(null);
@@ -82,64 +82,7 @@ function DiagramCanvasInner() {
         y: event.clientY,
       });
 
-      // Determine node size based on type
-      let size = DEFAULT_NODE_SIZE;
-      if (nodeType === 'decision') {
-        size = DECISION_NODE_SIZE;
-      } else if (nodeType === 'note') {
-        size = NOTE_NODE_SIZE;
-      }
-
-      // Create node data based on type
-      let nodeData: CustomNodeData;
-      switch (nodeType) {
-        case 'device':
-          nodeData = {
-            type: 'device',
-            props: {
-              name: deviceCategory ? deviceCategory.toUpperCase() : 'Device',
-              deviceMeta: {
-                category: deviceCategory || 'xray',
-              },
-            },
-          };
-          break;
-        case 'decision':
-          nodeData = {
-            type: 'decision',
-            props: {
-              name: 'Decision',
-              condition: '',
-              yesLabel: 'Yes',
-              noLabel: 'No',
-            },
-          };
-          break;
-        case 'note':
-          nodeData = {
-            type: 'note',
-            props: {
-              name: 'Note',
-              notes: '',
-            },
-          };
-          break;
-        default: // process
-          nodeData = {
-            type: 'process',
-            props: {
-              name: 'New Process',
-            },
-          };
-      }
-
-      const newNode: Node<CustomNodeData> = {
-        id: `node-${Date.now()}`,
-        type: nodeType,
-        position,
-        data: nodeData,
-      };
-
+      const newNode = createNode({ nodeType, position, deviceCategory });
       addNode(newNode);
     },
     [screenToFlowPosition, addNode]
@@ -169,67 +112,10 @@ function DiagramCanvasInner() {
   }, []);
 
   const createNodeAndConnect = useCallback(
-    (nodeType: NodeType, position: { x: number; y: number }) => {
+    (nodeType: NodeType, position: { x: number; y: number }, deviceCategory?: DeviceCategory) => {
       if (!connectingNodeId) return;
 
-      // Determine node size based on type
-      let size = DEFAULT_NODE_SIZE;
-      if (nodeType === 'decision') {
-        size = DECISION_NODE_SIZE;
-      } else if (nodeType === 'note') {
-        size = NOTE_NODE_SIZE;
-      }
-
-      // Create node data based on type
-      let nodeData: CustomNodeData;
-      switch (nodeType) {
-        case 'device':
-          nodeData = {
-            type: 'device',
-            props: {
-              name: 'Device',
-              deviceMeta: {
-                category: 'xray',
-              },
-            },
-          };
-          break;
-        case 'decision':
-          nodeData = {
-            type: 'decision',
-            props: {
-              name: 'Decision',
-              condition: '',
-              yesLabel: 'Yes',
-              noLabel: 'No',
-            },
-          };
-          break;
-        case 'note':
-          nodeData = {
-            type: 'note',
-            props: {
-              name: 'Note',
-              notes: '',
-            },
-          };
-          break;
-        default: // process
-          nodeData = {
-            type: 'process',
-            props: {
-              name: 'New Process',
-            },
-          };
-      }
-
-      const newNode: Node<CustomNodeData> = {
-        id: `node-${Date.now()}`,
-        type: nodeType,
-        position,
-        data: nodeData,
-      };
-
+      const newNode = createNode({ nodeType, position, deviceCategory });
       addNode(newNode);
 
       // Create connection from source to new node

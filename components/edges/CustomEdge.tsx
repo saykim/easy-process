@@ -3,7 +3,6 @@
 import { BaseEdge, EdgeProps, getSmoothStepPath, EdgeLabelRenderer } from '@xyflow/react';
 import { CustomEdgeData } from '@/types';
 import { EDGE_STYLES } from '@/lib/constants/edges';
-import { CSSProperties } from 'react';
 
 export function CustomEdge({
   id,

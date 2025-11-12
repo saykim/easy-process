@@ -1,7 +1,7 @@
 'use client';
 
 import { useDiagramStore } from '@/store/diagramStore';
-import { NodeType, DeviceNodeProps, DecisionNodeProps, BaseNodeProps, CustomEdgeData } from '@/types';
+import { DeviceNodeProps, DecisionNodeProps, CustomEdgeData } from '@/types';
 import { DEVICE_CATEGORIES } from '@/lib/constants/nodes';
 import { EDGE_STYLES, EDGE_COLORS, EDGE_ARROW_TYPES } from '@/lib/constants/edges';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -51,6 +51,10 @@ function DiagramCanvasInner() {
     addEdge,
     setSelectedNodeId,
     setSelectedEdgeId,
+    selectedNodeId,
+    selectedEdgeId,
+    deleteNode,
+    deleteEdge,
   } = useDiagramStore();
 
   const onConnect = useCallback(
@@ -184,6 +188,32 @@ function DiagramCanvasInner() {
     setPendingNodePosition(null);
     setConnectingNodeId(null);
   }, []);
+
+  // Handle Delete/Backspace key for deleting selected nodes/edges
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't handle if user is typing in an input
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+
+        if (selectedEdgeId) {
+          deleteEdge(selectedEdgeId);
+        } else if (selectedNodeId) {
+          deleteNode(selectedNodeId);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge]);
 
   return (
     <div ref={reactFlowWrapper} className="flex-1 bg-gray-100">

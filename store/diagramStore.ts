@@ -1,13 +1,16 @@
 import { create } from 'zustand';
 import { Node, Edge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Connection } from '@xyflow/react';
-import { CustomNodeData, CustomEdgeData, DiagramType, EdgeStyle } from '@/types';
+import { CustomNodeData, CustomEdgeData, DiagramType, EdgeStyle, SavedDiagram } from '@/types';
 import { DEFAULT_EDGE_STYLE, DEFAULT_EDGE_COLOR, DEFAULT_EDGE_ARROW_TYPE } from '@/lib/constants/edges';
 import { generateEdgeId } from '@/lib/utils/idGenerator';
+import { saveDiagram, getDiagram, deleteDiagram, getAllDiagrams } from '@/lib/utils/storage';
 
 interface DiagramState {
   // Diagram metadata
   diagramType: DiagramType;
   diagramTitle: string;
+  diagramDescription: string;
+  currentDiagramId: string | null;
 
   // Canvas state
   nodes: Node<CustomNodeData>[];
@@ -20,6 +23,7 @@ interface DiagramState {
   // Actions
   setDiagramType: (type: DiagramType) => void;
   setDiagramTitle: (title: string) => void;
+  setDiagramDescription: (description: string) => void;
 
   // Node actions
   setNodes: (nodes: Node<CustomNodeData>[]) => void;
@@ -42,12 +46,20 @@ interface DiagramState {
   // Utilities
   clearDiagram: () => void;
   loadDiagram: (nodes: Node<CustomNodeData>[], edges: Edge<CustomEdgeData>[]) => void;
+
+  // Storage operations
+  saveDiagramToStorage: (title: string, description?: string, isDraft?: boolean) => string;
+  loadDiagramFromStorage: (id: string) => void;
+  deleteDiagramFromStorage: (id: string) => void;
+  getAllSavedDiagrams: () => SavedDiagram[];
 }
 
 export const useDiagramStore = create<DiagramState>((set, get) => ({
   // Initial state
   diagramType: 'flow',
   diagramTitle: 'Untitled Diagram',
+  diagramDescription: '',
+  currentDiagramId: null,
   nodes: [],
   edges: [],
   selectedNodeId: null,
@@ -56,6 +68,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   // Diagram metadata actions
   setDiagramType: (type) => set({ diagramType: type }),
   setDiagramTitle: (title) => set({ diagramTitle: title }),
+  setDiagramDescription: (description) => set({ diagramDescription: description }),
 
   // Node actions
   setNodes: (nodes) => set({ nodes }),
@@ -164,5 +177,62 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       selectedNodeId: null,
       selectedEdgeId: null,
     });
+  },
+
+  // Storage operations
+  saveDiagramToStorage: (title, description = '', isDraft = false) => {
+    const state = get();
+    const id = state.currentDiagramId || `diagram-${Date.now()}`;
+
+    const diagramToSave: SavedDiagram = {
+      id,
+      title,
+      description,
+      nodes: state.nodes,
+      edges: state.edges,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isDraft,
+    };
+
+    saveDiagram(diagramToSave);
+    set({ currentDiagramId: id, diagramTitle: title, diagramDescription: description });
+
+    return id;
+  },
+
+  loadDiagramFromStorage: (id) => {
+    const diagram = getDiagram(id);
+    if (diagram) {
+      set({
+        currentDiagramId: diagram.id,
+        diagramTitle: diagram.title,
+        diagramDescription: diagram.description || '',
+        nodes: diagram.nodes,
+        edges: diagram.edges,
+        selectedNodeId: null,
+        selectedEdgeId: null,
+      });
+    }
+  },
+
+  deleteDiagramFromStorage: (id) => {
+    deleteDiagram(id);
+    // If deleting current diagram, reset
+    if (get().currentDiagramId === id) {
+      set({
+        currentDiagramId: null,
+        diagramTitle: 'Untitled Diagram',
+        diagramDescription: '',
+        nodes: [],
+        edges: [],
+        selectedNodeId: null,
+        selectedEdgeId: null,
+      });
+    }
+  },
+
+  getAllSavedDiagrams: () => {
+    return getAllDiagrams();
   },
 }));

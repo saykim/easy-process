@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -21,6 +21,8 @@ import { DecisionNode } from '@/components/nodes/DecisionNode';
 import { NoteNode } from '@/components/nodes/NoteNode';
 import { CustomEdge } from '@/components/edges/CustomEdge';
 import { QuickNodeMenu } from '@/components/canvas/QuickNodeMenu';
+import { SaveDialog } from '@/components/dialogs/SaveDialog';
+import { LoadDialog } from '@/components/dialogs/LoadDialog';
 import { DeviceCategory, NodeType } from '@/types';
 import { createNode } from '@/lib/utils/nodeFactory';
 
@@ -41,6 +43,8 @@ function DiagramCanvasInner() {
   const [connectingNodeId, setConnectingNodeId] = useState<OnConnectStartParams | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [pendingNodePosition, setPendingNodePosition] = useState<{ x: number; y: number } | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
 
   const {
     nodes,
@@ -55,6 +59,10 @@ function DiagramCanvasInner() {
     selectedEdgeId,
     deleteNode,
     deleteEdge,
+    saveDiagramToStorage,
+    loadDiagramFromStorage,
+    deleteDiagramFromStorage,
+    getAllSavedDiagrams,
   } = useDiagramStore();
 
   const onConnect = useCallback(
@@ -215,8 +223,81 @@ function DiagramCanvasInner() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge]);
 
+  // Save/Load handlers
+  const handleSave = useCallback(
+    (title: string, description: string, isDraft: boolean) => {
+      try {
+        saveDiagramToStorage(title, description, isDraft);
+        alert(isDraft ? '임시저장 되었습니다!' : '저장 되었습니다!');
+      } catch (error) {
+        alert('저장에 실패했습니다.');
+        console.error(error);
+      }
+    },
+    [saveDiagramToStorage]
+  );
+
+  const handleLoad = useCallback(
+    (id: string) => {
+      try {
+        loadDiagramFromStorage(id);
+      } catch (error) {
+        alert('불러오기에 실패했습니다.');
+        console.error(error);
+      }
+    },
+    [loadDiagramFromStorage]
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      try {
+        deleteDiagramFromStorage(id);
+      } catch (error) {
+        alert('삭제에 실패했습니다.');
+        console.error(error);
+      }
+    },
+    [deleteDiagramFromStorage]
+  );
+
+  // Auto-save functionality (debounced)
+  useEffect(() => {
+    // Skip auto-save if there are no nodes
+    if (nodes.length === 0) return;
+
+    const autoSaveTimer = setTimeout(() => {
+      try {
+        saveDiagramToStorage('자동 저장', '자동으로 저장된 프로세스입니다.', true);
+        console.log('Auto-saved at', new Date().toLocaleTimeString());
+      } catch (error) {
+        console.error('Auto-save failed:', error);
+      }
+    }, 3000); // Auto-save after 3 seconds of inactivity
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [nodes, edges, saveDiagramToStorage]);
+
   return (
-    <div ref={reactFlowWrapper} className="flex-1 bg-gray-100">
+    <div ref={reactFlowWrapper} className="flex-1 bg-gray-100 relative">
+      {/* Save/Load Buttons */}
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <button
+          onClick={() => setShowLoadDialog(true)}
+          className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors flex items-center gap-2"
+          title="저장된 프로세스 불러오기"
+        >
+          📂 불러오기
+        </button>
+        <button
+          onClick={() => setShowSaveDialog(true)}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-colors flex items-center gap-2"
+          title="프로세스 저장"
+        >
+          💾 저장
+        </button>
+      </div>
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -253,6 +334,22 @@ function DiagramCanvasInner() {
           onClose={handleMenuClose}
         />
       )}
+
+      {/* Save Dialog */}
+      <SaveDialog
+        isOpen={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        onSave={handleSave}
+      />
+
+      {/* Load Dialog */}
+      <LoadDialog
+        isOpen={showLoadDialog}
+        onClose={() => setShowLoadDialog(false)}
+        onLoad={handleLoad}
+        onDelete={handleDelete}
+        diagrams={getAllSavedDiagrams()}
+      />
     </div>
   );
 }

@@ -122,3 +122,15 @@ export interface AuditLog {
   payload: any;
   at: Date;
 }
+
+// Saved Diagram (for localStorage)
+export interface SavedDiagram {
+  id: string;
+  title: string;
+  description?: string;
+  nodes: Node<CustomNodeData>[];
+  edges: Edge<CustomEdgeData>[];
+  createdAt: string;
+  updatedAt: string;
+  isDraft: boolean;
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -10,6 +10,7 @@ import {
   ReactFlowProvider,
   Node,
   useReactFlow,
+  OnConnectStartParams,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -18,8 +19,10 @@ import { ProcessNode } from '@/components/nodes/ProcessNode';
 import { DeviceNode } from '@/components/nodes/DeviceNode';
 import { DecisionNode } from '@/components/nodes/DecisionNode';
 import { NoteNode } from '@/components/nodes/NoteNode';
-import { CustomNodeData, DeviceCategory, NodeType } from '@/types';
-import { DEFAULT_NODE_SIZE, DECISION_NODE_SIZE, NOTE_NODE_SIZE } from '@/lib/constants/nodes';
+import { CustomEdge } from '@/components/edges/CustomEdge';
+import { QuickNodeMenu } from '@/components/canvas/QuickNodeMenu';
+import { DeviceCategory, NodeType } from '@/types';
+import { createNode } from '@/lib/utils/nodeFactory';
 
 const nodeTypes = {
   process: ProcessNode,
@@ -28,9 +31,16 @@ const nodeTypes = {
   note: NoteNode,
 } as const;
 
+const edgeTypes = {
+  default: CustomEdge,
+} as const;
+
 function DiagramCanvasInner() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
+  const [connectingNodeId, setConnectingNodeId] = useState<OnConnectStartParams | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [pendingNodePosition, setPendingNodePosition] = useState<{ x: number; y: number } | null>(null);
 
   const {
     nodes,
@@ -41,6 +51,10 @@ function DiagramCanvasInner() {
     addEdge,
     setSelectedNodeId,
     setSelectedEdgeId,
+    selectedNodeId,
+    selectedEdgeId,
+    deleteNode,
+    deleteEdge,
   } = useDiagramStore();
 
   const onConnect = useCallback(
@@ -72,64 +86,7 @@ function DiagramCanvasInner() {
         y: event.clientY,
       });
 
-      // Determine node size based on type
-      let size = DEFAULT_NODE_SIZE;
-      if (nodeType === 'decision') {
-        size = DECISION_NODE_SIZE;
-      } else if (nodeType === 'note') {
-        size = NOTE_NODE_SIZE;
-      }
-
-      // Create node data based on type
-      let nodeData: CustomNodeData;
-      switch (nodeType) {
-        case 'device':
-          nodeData = {
-            type: 'device',
-            props: {
-              name: deviceCategory ? deviceCategory.toUpperCase() : 'Device',
-              deviceMeta: {
-                category: deviceCategory || 'xray',
-              },
-            },
-          };
-          break;
-        case 'decision':
-          nodeData = {
-            type: 'decision',
-            props: {
-              name: 'Decision',
-              condition: '',
-              yesLabel: 'Yes',
-              noLabel: 'No',
-            },
-          };
-          break;
-        case 'note':
-          nodeData = {
-            type: 'note',
-            props: {
-              name: 'Note',
-              notes: '',
-            },
-          };
-          break;
-        default: // process
-          nodeData = {
-            type: 'process',
-            props: {
-              name: 'New Process',
-            },
-          };
-      }
-
-      const newNode: Node<CustomNodeData> = {
-        id: `node-${Date.now()}`,
-        type: nodeType,
-        position,
-        data: nodeData,
-      };
-
+      const newNode = createNode({ nodeType, position, deviceCategory });
       addNode(newNode);
     },
     [screenToFlowPosition, addNode]
@@ -154,6 +111,110 @@ function DiagramCanvasInner() {
     setSelectedEdgeId(null);
   }, [setSelectedNodeId, setSelectedEdgeId]);
 
+  const onConnectStart = useCallback((_: any, params: OnConnectStartParams) => {
+    setConnectingNodeId(params);
+  }, []);
+
+  const createNodeAndConnect = useCallback(
+    (nodeType: NodeType, position: { x: number; y: number }, deviceCategory?: DeviceCategory) => {
+      if (!connectingNodeId) return;
+
+      const newNode = createNode({ nodeType, position, deviceCategory });
+      addNode(newNode);
+
+      // Create connection from source to new node
+      const sourceNode = connectingNodeId.nodeId;
+      const sourceHandle = connectingNodeId.handleId;
+
+      if (sourceNode) {
+        // Determine if source is output or input based on handleType
+        const connection: Connection = connectingNodeId.handleType === 'source'
+          ? {
+              source: sourceNode,
+              sourceHandle: sourceHandle,
+              target: newNode.id,
+              targetHandle: 'top',
+            }
+          : {
+              source: newNode.id,
+              sourceHandle: 'bottom',
+              target: sourceNode,
+              targetHandle: sourceHandle,
+            };
+
+        addEdge(connection);
+      }
+
+      setConnectingNodeId(null);
+    },
+    [connectingNodeId, addNode, addEdge]
+  );
+
+  const onConnectEnd = useCallback(
+    (event: MouseEvent | TouchEvent) => {
+      if (!connectingNodeId) return;
+
+      const targetIsPane = (event.target as HTMLElement).classList.contains('react-flow__pane');
+
+      if (targetIsPane && reactFlowWrapper.current) {
+        const { clientX, clientY } = 'touches' in event ? event.touches[0] : event;
+        const position = screenToFlowPosition({
+          x: clientX,
+          y: clientY,
+        });
+
+        // Show menu at mouse position
+        setMenuPosition({ x: clientX, y: clientY });
+        setPendingNodePosition(position);
+      } else {
+        setConnectingNodeId(null);
+      }
+    },
+    [connectingNodeId, screenToFlowPosition]
+  );
+
+  const handleNodeTypeSelect = useCallback(
+    (nodeType: NodeType) => {
+      if (pendingNodePosition) {
+        createNodeAndConnect(nodeType, pendingNodePosition);
+        setPendingNodePosition(null);
+      }
+    },
+    [pendingNodePosition, createNodeAndConnect]
+  );
+
+  const handleMenuClose = useCallback(() => {
+    setMenuPosition(null);
+    setPendingNodePosition(null);
+    setConnectingNodeId(null);
+  }, []);
+
+  // Handle Delete/Backspace key for deleting selected nodes/edges
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't handle if user is typing in an input
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+
+        if (selectedEdgeId) {
+          deleteEdge(selectedEdgeId);
+        } else if (selectedNodeId) {
+          deleteNode(selectedNodeId);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge]);
+
   return (
     <div ref={reactFlowWrapper} className="flex-1 bg-gray-100">
       <ReactFlow
@@ -162,25 +223,36 @@ function DiagramCanvasInner() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onConnectStart={onConnectStart}
+        onConnectEnd={onConnectEnd}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes as any}
+        edgeTypes={edgeTypes as any}
         fitView
         snapToGrid
         snapGrid={[15, 15]}
         defaultEdgeOptions={{
-          type: 'smoothstep',
+          type: 'default',
           animated: false,
-          style: { strokeWidth: 2 },
         }}
       >
         <Background color="#aaa" gap={15} />
         <Controls />
         <MiniMap />
       </ReactFlow>
+
+      {/* Quick Node Creation Menu */}
+      {menuPosition && (
+        <QuickNodeMenu
+          position={menuPosition}
+          onSelect={handleNodeTypeSelect}
+          onClose={handleMenuClose}
+        />
+      )}
     </div>
   );
 }

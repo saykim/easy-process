@@ -1,6 +1,6 @@
 'use client';
 
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, NodeResizer } from '@xyflow/react';
 import { CustomNodeData, DeviceNodeProps } from '@/types';
 import { DEVICE_CATEGORIES } from '@/lib/constants/nodes';
 
@@ -16,12 +16,23 @@ export function DeviceNode({ data, selected }: DeviceNodeComponentProps) {
   const categoryInfo = DEVICE_CATEGORIES[category];
 
   return (
-    <div
-      className={`px-4 py-3 shadow-md rounded-lg bg-white border-2 min-w-[200px] ${
-        selected ? 'border-blue-500' : 'border-gray-300'
-      }`}
-      style={{ borderColor: selected ? categoryInfo.color : undefined }}
-    >
+    <>
+      <NodeResizer
+        color={categoryInfo.color}
+        isVisible={selected}
+        minWidth={200}
+        minHeight={80}
+      />
+      <div
+        className={`px-4 py-3 shadow-md rounded-lg bg-white border-2 w-full h-full ${
+          selected ? 'border-blue-500' : 'border-gray-300'
+        }`}
+        style={{
+          borderColor: selected ? categoryInfo.color : undefined,
+          minWidth: '200px',
+          minHeight: '80px'
+        }}
+      >
       {/* Handles */}
       <Handle
         type="target"
@@ -54,7 +65,7 @@ export function DeviceNode({ data, selected }: DeviceNodeComponentProps) {
 
       {/* Node content */}
       <div className="space-y-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
           <span className="text-2xl">{categoryInfo.icon}</span>
           <div className="font-semibold text-gray-900">
             {nodeData?.name || categoryInfo.label}
@@ -66,10 +77,20 @@ export function DeviceNode({ data, selected }: DeviceNodeComponentProps) {
         {deviceMeta?.manufacturer && (
           <div className="text-xs text-gray-500">Mfr: {deviceMeta.manufacturer}</div>
         )}
+        {nodeData?.inputs && (
+          <div className="text-xs text-green-600">⬇️ In: {nodeData.inputs}</div>
+        )}
+        {nodeData?.outputs && (
+          <div className="text-xs text-blue-600">⬆️ Out: {nodeData.outputs}</div>
+        )}
+        {nodeData?.operation && (
+          <div className="text-xs text-purple-600 whitespace-pre-wrap">⚙️ {nodeData.operation}</div>
+        )}
         {nodeData?.notes && (
-          <div className="text-xs text-gray-500">{nodeData.notes}</div>
+          <div className="text-xs text-gray-500 italic whitespace-pre-wrap">{nodeData.notes}</div>
         )}
       </div>
     </div>
+    </>
   );
 }

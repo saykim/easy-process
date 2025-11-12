@@ -1,6 +1,6 @@
 'use client';
 
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, NodeResizer } from '@xyflow/react';
 import { CustomNodeData } from '@/types';
 
 interface NoteNodeComponentProps {
@@ -12,11 +12,19 @@ export function NoteNode({ data, selected }: NoteNodeComponentProps) {
   const nodeData = data.props as any;
 
   return (
-    <div
-      className={`px-4 py-3 shadow-sm rounded bg-yellow-100 border-l-4 min-w-[180px] ${
-        selected ? 'border-yellow-500' : 'border-yellow-400'
-      }`}
-    >
+    <>
+      <NodeResizer
+        color="#eab308"
+        isVisible={selected}
+        minWidth={180}
+        minHeight={60}
+      />
+      <div
+        className={`px-4 py-3 shadow-sm rounded bg-yellow-100 border-l-4 w-full h-full ${
+          selected ? 'border-yellow-500' : 'border-yellow-400'
+        }`}
+        style={{ minWidth: '180px', minHeight: '60px' }}
+      >
       {/* Optional handles for notes (they can also be connected) */}
       <Handle
         type="target"
@@ -40,5 +48,6 @@ export function NoteNode({ data, selected }: NoteNodeComponentProps) {
         )}
       </div>
     </div>
+    </>
   );
 }

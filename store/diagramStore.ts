@@ -48,10 +48,10 @@ interface DiagramState {
   loadDiagram: (nodes: Node<CustomNodeData>[], edges: Edge<CustomEdgeData>[]) => void;
 
   // Storage operations
-  saveDiagramToStorage: (title: string, description?: string, isDraft?: boolean) => string;
-  loadDiagramFromStorage: (id: string) => void;
-  deleteDiagramFromStorage: (id: string) => void;
-  getAllSavedDiagrams: () => SavedDiagram[];
+  saveDiagramToStorage: (title: string, description?: string, isDraft?: boolean) => Promise<string>;
+  loadDiagramFromStorage: (id: string) => Promise<void>;
+  deleteDiagramFromStorage: (id: string) => Promise<void>;
+  getAllSavedDiagrams: () => Promise<SavedDiagram[]>;
 }
 
 export const useDiagramStore = create<DiagramState>((set, get) => ({
@@ -180,7 +180,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   },
 
   // Storage operations
-  saveDiagramToStorage: (title, description = '', isDraft = false) => {
+  saveDiagramToStorage: async (title, description = '', isDraft = false) => {
     const state = get();
     const id = state.currentDiagramId || `diagram-${Date.now()}`;
 
@@ -195,14 +195,14 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       isDraft,
     };
 
-    saveDiagram(diagramToSave);
+    await saveDiagram(diagramToSave);
     set({ currentDiagramId: id, diagramTitle: title, diagramDescription: description });
 
     return id;
   },
 
-  loadDiagramFromStorage: (id) => {
-    const diagram = getDiagram(id);
+  loadDiagramFromStorage: async (id) => {
+    const diagram = await getDiagram(id);
     if (diagram) {
       set({
         currentDiagramId: diagram.id,
@@ -216,8 +216,8 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     }
   },
 
-  deleteDiagramFromStorage: (id) => {
-    deleteDiagram(id);
+  deleteDiagramFromStorage: async (id) => {
+    await deleteDiagram(id);
     // If deleting current diagram, reset
     if (get().currentDiagramId === id) {
       set({
@@ -232,7 +232,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     }
   },
 
-  getAllSavedDiagrams: () => {
-    return getAllDiagrams();
+  getAllSavedDiagrams: async () => {
+    return await getAllDiagrams();
   },
 }));

@@ -1,16 +1,17 @@
 import { SavedDiagram } from '@/types';
 
-const STORAGE_KEY = 'easy-process-diagrams';
-
 /**
- * Get all saved diagrams from localStorage
+ * Get all saved diagrams from the database via API
  */
-export function getAllDiagrams(): SavedDiagram[] {
+export async function getAllDiagrams(): Promise<SavedDiagram[]> {
   if (typeof window === 'undefined') return [];
 
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const response = await fetch('/api/diagrams');
+    if (!response.ok) {
+      throw new Error('Failed to fetch diagrams');
+    }
+    return await response.json();
   } catch (error) {
     console.error('Failed to load diagrams:', error);
     return [];
@@ -18,40 +19,44 @@ export function getAllDiagrams(): SavedDiagram[] {
 }
 
 /**
- * Get a single diagram by ID
+ * Get a single diagram by ID from the database via API
  */
-export function getDiagram(id: string): SavedDiagram | null {
-  const diagrams = getAllDiagrams();
-  return diagrams.find(d => d.id === id) || null;
+export async function getDiagram(id: string): Promise<SavedDiagram | null> {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const response = await fetch(`/api/diagrams/${id}`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error('Failed to fetch diagram');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to load diagram:', error);
+    return null;
+  }
 }
 
 /**
- * Save a new diagram or update an existing one
+ * Save a new diagram or update an existing one via API
  */
-export function saveDiagram(diagram: SavedDiagram): void {
+export async function saveDiagram(diagram: SavedDiagram): Promise<void> {
   if (typeof window === 'undefined') return;
 
   try {
-    const diagrams = getAllDiagrams();
-    const existingIndex = diagrams.findIndex(d => d.id === diagram.id);
+    const response = await fetch('/api/diagrams', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(diagram),
+    });
 
-    if (existingIndex >= 0) {
-      // Update existing - preserve createdAt from original
-      diagrams[existingIndex] = {
-        ...diagram,
-        createdAt: diagrams[existingIndex].createdAt,
-        updatedAt: new Date().toISOString(),
-      };
-    } else {
-      // Add new
-      diagrams.push({
-        ...diagram,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+    if (!response.ok) {
+      throw new Error('Failed to save diagram');
     }
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(diagrams));
   } catch (error) {
     console.error('Failed to save diagram:', error);
     throw error;
@@ -59,15 +64,19 @@ export function saveDiagram(diagram: SavedDiagram): void {
 }
 
 /**
- * Delete a diagram by ID
+ * Delete a diagram by ID via API
  */
-export function deleteDiagram(id: string): void {
+export async function deleteDiagram(id: string): Promise<void> {
   if (typeof window === 'undefined') return;
 
   try {
-    const diagrams = getAllDiagrams();
-    const filtered = diagrams.filter(d => d.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    const response = await fetch(`/api/diagrams/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete diagram');
+    }
   } catch (error) {
     console.error('Failed to delete diagram:', error);
     throw error;

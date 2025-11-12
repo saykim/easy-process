@@ -227,9 +227,9 @@ function DiagramCanvasInner() {
 
   // Save/Load handlers
   const handleSave = useCallback(
-    (title: string, description: string, isDraft: boolean) => {
+    async (title: string, description: string, isDraft: boolean) => {
       try {
-        saveDiagramToStorage(title, description, isDraft);
+        await saveDiagramToStorage(title, description, isDraft);
         alert(isDraft ? '임시저장 되었습니다!' : '저장 되었습니다!');
       } catch (error) {
         alert('저장에 실패했습니다.');
@@ -240,9 +240,9 @@ function DiagramCanvasInner() {
   );
 
   const handleLoad = useCallback(
-    (id: string) => {
+    async (id: string) => {
       try {
-        loadDiagramFromStorage(id);
+        await loadDiagramFromStorage(id);
       } catch (error) {
         alert('불러오기에 실패했습니다.');
         console.error(error);
@@ -252,9 +252,9 @@ function DiagramCanvasInner() {
   );
 
   const handleDelete = useCallback(
-    (id: string) => {
+    async (id: string) => {
       try {
-        deleteDiagramFromStorage(id);
+        await deleteDiagramFromStorage(id);
       } catch (error) {
         alert('삭제에 실패했습니다.');
         console.error(error);
@@ -263,8 +263,14 @@ function DiagramCanvasInner() {
     [deleteDiagramFromStorage]
   );
 
-  // Memoize saved diagrams list to avoid unnecessary re-fetching
-  const savedDiagrams = useMemo(() => getAllSavedDiagrams(), [showLoadDialog]);
+  // Fetch saved diagrams when load dialog opens
+  const [savedDiagrams, setSavedDiagrams] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (showLoadDialog) {
+      getAllSavedDiagrams().then(setSavedDiagrams);
+    }
+  }, [showLoadDialog, getAllSavedDiagrams]);
 
   // Image export handlers
   const handleExportImage = useCallback(async () => {
@@ -300,9 +306,9 @@ function DiagramCanvasInner() {
     // Skip auto-save if there are no nodes
     if (nodes.length === 0) return;
 
-    const autoSaveTimer = setTimeout(() => {
+    const autoSaveTimer = setTimeout(async () => {
       try {
-        saveDiagramToStorage(
+        await saveDiagramToStorage(
           '자동 저장',
           `자동 저장 - ${new Date().toLocaleString('ko-KR')}`,
           true

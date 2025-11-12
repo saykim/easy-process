@@ -261,19 +261,27 @@ function DiagramCanvasInner() {
     [deleteDiagramFromStorage]
   );
 
+  // Memoize saved diagrams list to avoid unnecessary re-fetching
+  const savedDiagrams = useMemo(() => getAllSavedDiagrams(), [showLoadDialog]);
+
   // Auto-save functionality (debounced)
+  // Note: Auto-save creates a draft entry that can be distinguished by isDraft=true
   useEffect(() => {
     // Skip auto-save if there are no nodes
     if (nodes.length === 0) return;
 
     const autoSaveTimer = setTimeout(() => {
       try {
-        saveDiagramToStorage('자동 저장', '자동으로 저장된 프로세스입니다.', true);
+        saveDiagramToStorage(
+          '자동 저장',
+          `자동 저장 - ${new Date().toLocaleString('ko-KR')}`,
+          true
+        );
         console.log('Auto-saved at', new Date().toLocaleTimeString());
       } catch (error) {
         console.error('Auto-save failed:', error);
       }
-    }, 3000); // Auto-save after 3 seconds of inactivity
+    }, 5000); // Auto-save after 5 seconds of inactivity (increased from 3s)
 
     return () => clearTimeout(autoSaveTimer);
   }, [nodes, edges, saveDiagramToStorage]);
@@ -348,7 +356,7 @@ function DiagramCanvasInner() {
         onClose={() => setShowLoadDialog(false)}
         onLoad={handleLoad}
         onDelete={handleDelete}
-        diagrams={getAllSavedDiagrams()}
+        diagrams={savedDiagrams}
       />
     </div>
   );

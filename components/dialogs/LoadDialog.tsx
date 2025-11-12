@@ -22,6 +22,14 @@ export function LoadDialog({
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'saved' | 'draft'>('all');
 
+  // Reset search and filter when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setSearchTerm('');
+      setFilter('all');
+    }
+  }, [isOpen]);
+
   const filteredDiagrams = diagrams.filter((diagram) => {
     const matchesSearch =
       diagram.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

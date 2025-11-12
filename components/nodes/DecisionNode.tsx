@@ -1,6 +1,6 @@
 'use client';
 
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, NodeResizer } from '@xyflow/react';
 import { CustomNodeData, DecisionNodeProps } from '@/types';
 
 interface DecisionNodeComponentProps {
@@ -12,7 +12,14 @@ export function DecisionNode({ data, selected }: DecisionNodeComponentProps) {
   const nodeData = data.props as DecisionNodeProps;
 
   return (
-    <div className="relative w-[150px] h-[150px]">
+    <>
+      <NodeResizer
+        color="#eab308"
+        isVisible={selected}
+        minWidth={150}
+        minHeight={150}
+      />
+      <div className="relative w-full h-full" style={{ minWidth: '150px', minHeight: '150px' }}>
       {/* Diamond shape */}
       <div
         className={`absolute inset-0 transform rotate-45 shadow-md bg-yellow-50 border-2 ${
@@ -49,7 +56,7 @@ export function DecisionNode({ data, selected }: DecisionNodeComponentProps) {
       {/* Content (not rotated) */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-2 max-w-[100px]">
-          <div className="font-semibold text-gray-900 text-sm break-words">
+          <div className="font-semibold text-gray-900 text-sm break-words whitespace-pre-wrap">
             {nodeData?.name || nodeData?.condition || 'Decision?'}
           </div>
         </div>
@@ -67,5 +74,6 @@ export function DecisionNode({ data, selected }: DecisionNodeComponentProps) {
         </>
       )}
     </div>
+    </>
   );
 }

@@ -25,6 +25,7 @@ import { SaveDialog } from '@/components/dialogs/SaveDialog';
 import { LoadDialog } from '@/components/dialogs/LoadDialog';
 import { DeviceCategory, NodeType } from '@/types';
 import { createNode } from '@/lib/utils/nodeFactory';
+import { exportDiagramAsImage, copyDiagramToClipboard } from '@/lib/utils/exportImage';
 
 const nodeTypes = {
   process: ProcessNode,
@@ -45,6 +46,7 @@ function DiagramCanvasInner() {
   const [pendingNodePosition, setPendingNodePosition] = useState<{ x: number; y: number } | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showLoadDialog, setShowLoadDialog] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const {
     nodes,
@@ -264,6 +266,34 @@ function DiagramCanvasInner() {
   // Memoize saved diagrams list to avoid unnecessary re-fetching
   const savedDiagrams = useMemo(() => getAllSavedDiagrams(), [showLoadDialog]);
 
+  // Image export handlers
+  const handleExportImage = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const title = nodes.length > 0 ? '프로세스-다이어그램' : 'empty-diagram';
+      await exportDiagramAsImage('diagram-canvas', `${title}.png`);
+      alert('이미지가 다운로드되었습니다!');
+    } catch (error) {
+      alert('이미지 내보내기에 실패했습니다.');
+      console.error(error);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [nodes]);
+
+  const handleCopyImage = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      await copyDiagramToClipboard();
+      alert('이미지가 클립보드에 복사되었습니다!');
+    } catch (error) {
+      alert('클립보드 복사에 실패했습니다.');
+      console.error(error);
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
+
   // Auto-save functionality (debounced)
   // Note: Auto-save creates a draft entry that can be distinguished by isDraft=true
   useEffect(() => {
@@ -288,7 +318,7 @@ function DiagramCanvasInner() {
 
   return (
     <div ref={reactFlowWrapper} className="flex-1 bg-gray-100 relative">
-      {/* Save/Load Buttons */}
+      {/* Action Buttons */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <button
           onClick={() => setShowLoadDialog(true)}
@@ -296,6 +326,22 @@ function DiagramCanvasInner() {
           title="저장된 프로세스 불러오기"
         >
           📂 불러오기
+        </button>
+        <button
+          onClick={handleExportImage}
+          disabled={isExporting || nodes.length === 0}
+          className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="프로세스를 이미지로 내보내기 (PNG)"
+        >
+          📸 {isExporting ? '처리중...' : '이미지'}
+        </button>
+        <button
+          onClick={handleCopyImage}
+          disabled={isExporting || nodes.length === 0}
+          className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="클립보드에 복사 (문서/이메일에 바로 붙여넣기)"
+        >
+          📋 복사
         </button>
         <button
           onClick={() => setShowSaveDialog(true)}

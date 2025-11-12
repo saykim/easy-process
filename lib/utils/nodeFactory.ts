@@ -1,5 +1,6 @@
 import { Node } from '@xyflow/react';
 import { CustomNodeData, NodeType, DeviceCategory } from '@/types';
+import { generateNodeId } from './idGenerator';
 
 interface CreateNodeOptions {
   nodeType: NodeType;
@@ -55,7 +56,7 @@ export function createNode({ nodeType, position, deviceCategory }: CreateNodeOpt
   }
 
   return {
-    id: `node-${Date.now()}`,
+    id: generateNodeId(),
     type: nodeType,
     position,
     data: nodeData,

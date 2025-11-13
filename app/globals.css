@@ -120,3 +120,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print Optimization */
+@media print {
+  /* Hide UI buttons and controls when printing */
+  button,
+  .react-flow__controls,
+  .react-flow__minimap {
+    display: none !important;
+  }
+
+  /* Optimize viewport for printing */
+  .react-flow__viewport {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Ensure white background for print */
+  body,
+  .react-flow {
+    background-color: white !important;
+  }
+
+  /* Remove shadows for cleaner print */
+  .shadow-md,
+  .shadow-sm,
+  .shadow-lg,
+  .shadow-xl {
+    box-shadow: none !important;
+  }
+
+  /* Ensure full page width */
+  @page {
+    size: A4 landscape;
+    margin: 1cm;
+  }
+}

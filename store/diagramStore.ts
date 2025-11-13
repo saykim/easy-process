@@ -182,16 +182,18 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   // Storage operations
   saveDiagramToStorage: async (title, description = '', isDraft = false) => {
     const state = get();
-
-    // Auto-save uses a fixed ID to avoid overwriting user-saved diagrams
-    // User-saved diagrams (isDraft=false) use currentDiagramId or create new one
     let id: string;
 
     if (isDraft && title === '자동 저장') {
-      // Auto-save: always use a fixed ID
+      // Auto-save: always use a fixed ID to avoid conflicts
       id = 'auto-save-draft';
+    } else if (!isDraft) {
+      // Manual save (저장 button): ALWAYS create a new diagram
+      // This allows users to save multiple versions with different names
+      // Even if they already have a currentDiagramId, we create a new one
+      id = `diagram-${Date.now()}`;
     } else {
-      // Manual save: use current ID or create new one
+      // Manual draft save (임시저장 button): update current or create new
       id = state.currentDiagramId || `diagram-${Date.now()}`;
     }
 
@@ -208,7 +210,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
 
     await saveDiagram(diagramToSave);
 
-    // Only update currentDiagramId for manual saves (not auto-save)
+    // Update currentDiagramId for manual saves (not auto-save)
     if (!(isDraft && title === '자동 저장')) {
       set({ currentDiagramId: id, diagramTitle: title, diagramDescription: description });
     }

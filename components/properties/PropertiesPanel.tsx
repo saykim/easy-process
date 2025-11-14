@@ -142,6 +142,7 @@ export function PropertiesPanel() {
       props: {
         ...deviceProps,
         deviceMeta: {
+          category: deviceProps.deviceMeta?.category || 'xray',
           ...deviceProps.deviceMeta,
           [field]: value,
         },

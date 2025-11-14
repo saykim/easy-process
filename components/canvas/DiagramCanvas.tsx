@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, useEffect, useMemo } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -9,6 +9,7 @@ import {
   Connection,
   ReactFlowProvider,
   Node,
+  Edge,
   useReactFlow,
   OnConnectStartParams,
 } from '@xyflow/react';
@@ -23,7 +24,7 @@ import { CustomEdge } from '@/components/edges/CustomEdge';
 import { QuickNodeMenu } from '@/components/canvas/QuickNodeMenu';
 import { SaveDialog } from '@/components/dialogs/SaveDialog';
 import { LoadDialog } from '@/components/dialogs/LoadDialog';
-import { DeviceCategory, NodeType } from '@/types';
+import { DeviceCategory, NodeType, SavedDiagram } from '@/types';
 import { createNode } from '@/lib/utils/nodeFactory';
 import { exportDiagramAsImage, copyDiagramToClipboard } from '@/lib/utils/exportImage';
 
@@ -116,7 +117,7 @@ function DiagramCanvasInner() {
   );
 
   const onEdgeClick = useCallback(
-    (_event: React.MouseEvent, edge: any) => {
+    (_event: React.MouseEvent, edge: Edge) => {
       setSelectedEdgeId(edge.id);
     },
     [setSelectedEdgeId]
@@ -127,7 +128,7 @@ function DiagramCanvasInner() {
     setSelectedEdgeId(null);
   }, [setSelectedNodeId, setSelectedEdgeId]);
 
-  const onConnectStart = useCallback((_: any, params: OnConnectStartParams) => {
+  const onConnectStart = useCallback((_event: React.MouseEvent | React.TouchEvent, params: OnConnectStartParams) => {
     setConnectingNodeId(params);
   }, []);
 
@@ -315,7 +316,7 @@ function DiagramCanvasInner() {
   );
 
   // Fetch saved diagrams when load dialog opens
-  const [savedDiagrams, setSavedDiagrams] = useState<any[]>([]);
+  const [savedDiagrams, setSavedDiagrams] = useState<SavedDiagram[]>([]);
 
   useEffect(() => {
     if (showLoadDialog) {

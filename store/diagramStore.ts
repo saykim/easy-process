@@ -233,9 +233,9 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     set({
       edges: get().edges.map((edge) =>
         edge.id === edgeId
-          ? { ...edge, data: { ...edge.data, ...data } as CustomEdgeData }
+          ? { ...edge, data: { ...edge.data, ...data } }
           : edge
-      ) as Edge<CustomEdgeData>[],
+      ),
     });
   },
 

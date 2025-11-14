@@ -63,6 +63,10 @@ function DiagramCanvasInner() {
     deleteEdge,
     copyNode,
     pasteNode,
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackward,
     saveDiagramToStorage,
     loadDiagramFromStorage,
     deleteDiagramFromStorage,
@@ -201,7 +205,7 @@ function DiagramCanvasInner() {
     setConnectingNodeId(null);
   }, []);
 
-  // Handle keyboard shortcuts for copy/paste and delete
+  // Handle keyboard shortcuts for copy/paste, delete, and layer ordering
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Don't handle if user is typing in an input
@@ -229,6 +233,33 @@ function DiagramCanvasInner() {
         pasteNode();
       }
 
+      // Layer ordering shortcuts (only for nodes)
+      if (selectedNodeId) {
+        // Bring to Front: Ctrl+Shift+] / Cmd+Shift+]
+        if (ctrlOrCmd && event.shiftKey && event.key === ']') {
+          event.preventDefault();
+          bringToFront();
+        }
+
+        // Send to Back: Ctrl+Shift+[ / Cmd+Shift+[
+        if (ctrlOrCmd && event.shiftKey && event.key === '[') {
+          event.preventDefault();
+          sendToBack();
+        }
+
+        // Bring Forward: Ctrl+] / Cmd+]
+        if (ctrlOrCmd && !event.shiftKey && event.key === ']') {
+          event.preventDefault();
+          bringForward();
+        }
+
+        // Send Backward: Ctrl+[ / Cmd+[
+        if (ctrlOrCmd && !event.shiftKey && event.key === '[') {
+          event.preventDefault();
+          sendBackward();
+        }
+      }
+
       // Delete: Delete/Backspace
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
@@ -243,7 +274,7 @@ function DiagramCanvasInner() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge, copyNode, pasteNode]);
+  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge, copyNode, pasteNode, bringToFront, sendToBack, bringForward, sendBackward]);
 
   // Save/Load handlers
   const handleSave = useCallback(

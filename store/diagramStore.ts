@@ -36,6 +36,10 @@ interface DiagramState {
   deleteNode: (nodeId: string) => void;
   copyNode: () => void;
   pasteNode: () => void;
+  bringToFront: () => void;
+  sendToBack: () => void;
+  bringForward: () => void;
+  sendBackward: () => void;
 
   // Edge actions
   setEdges: (edges: Edge<CustomEdgeData>[]) => void;
@@ -140,6 +144,60 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
       nodes: [...nodes, newNode],
       selectedNodeId: newNode.id,
     });
+  },
+
+  bringToFront: () => {
+    const { selectedNodeId, nodes } = get();
+    if (!selectedNodeId) return;
+
+    const selectedNode = nodes.find((node) => node.id === selectedNodeId);
+    if (!selectedNode) return;
+
+    // Move selected node to end of array (renders on top)
+    const otherNodes = nodes.filter((node) => node.id !== selectedNodeId);
+    set({ nodes: [...otherNodes, selectedNode] });
+  },
+
+  sendToBack: () => {
+    const { selectedNodeId, nodes } = get();
+    if (!selectedNodeId) return;
+
+    const selectedNode = nodes.find((node) => node.id === selectedNodeId);
+    if (!selectedNode) return;
+
+    // Move selected node to start of array (renders on bottom)
+    const otherNodes = nodes.filter((node) => node.id !== selectedNodeId);
+    set({ nodes: [selectedNode, ...otherNodes] });
+  },
+
+  bringForward: () => {
+    const { selectedNodeId, nodes } = get();
+    if (!selectedNodeId) return;
+
+    const currentIndex = nodes.findIndex((node) => node.id === selectedNodeId);
+    if (currentIndex === -1 || currentIndex === nodes.length - 1) return;
+
+    // Swap with next node
+    const newNodes = [...nodes];
+    [newNodes[currentIndex], newNodes[currentIndex + 1]] =
+      [newNodes[currentIndex + 1], newNodes[currentIndex]];
+
+    set({ nodes: newNodes });
+  },
+
+  sendBackward: () => {
+    const { selectedNodeId, nodes } = get();
+    if (!selectedNodeId) return;
+
+    const currentIndex = nodes.findIndex((node) => node.id === selectedNodeId);
+    if (currentIndex === -1 || currentIndex === 0) return;
+
+    // Swap with previous node
+    const newNodes = [...nodes];
+    [newNodes[currentIndex], newNodes[currentIndex - 1]] =
+      [newNodes[currentIndex - 1], newNodes[currentIndex]];
+
+    set({ nodes: newNodes });
   },
 
   // Edge actions

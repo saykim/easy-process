@@ -12,6 +12,7 @@ import {
   Edge,
   useReactFlow,
   OnConnectStartParams,
+  OnConnectStart,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -128,7 +129,7 @@ function DiagramCanvasInner() {
     setSelectedEdgeId(null);
   }, [setSelectedNodeId, setSelectedEdgeId]);
 
-  const onConnectStart = useCallback((_event, params: OnConnectStartParams) => {
+  const onConnectStart: OnConnectStart = useCallback((_event, params) => {
     setConnectingNodeId(params);
   }, []);
 

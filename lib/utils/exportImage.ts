@@ -32,11 +32,9 @@ async function captureReactFlowCanvas(): Promise<HTMLCanvasElement> {
 
 /**
  * Export the React Flow diagram as a PNG image
- * @param elementId - The ID of the element to capture (default: react-flow container)
  * @param filename - The filename for the downloaded image
  */
 export async function exportDiagramAsImage(
-  elementId: string = 'diagram-canvas',
   filename: string = 'process-diagram.png'
 ): Promise<void> {
   try {

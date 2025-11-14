@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { SavedDiagram } from '@/types';
 import { exportDiagram } from '@/lib/utils/storage';
 
@@ -12,23 +12,21 @@ interface LoadDialogProps {
   diagrams: SavedDiagram[];
 }
 
-export function LoadDialog({
-  isOpen,
+interface LoadDialogContentProps {
+  onClose: () => void;
+  onLoad: (id: string) => void;
+  onDelete: (id: string) => void;
+  diagrams: SavedDiagram[];
+}
+
+function LoadDialogContent({
   onClose,
   onLoad,
   onDelete,
   diagrams,
-}: LoadDialogProps) {
+}: LoadDialogContentProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'saved' | 'draft'>('all');
-
-  // Reset search and filter when dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      setSearchTerm('');
-      setFilter('all');
-    }
-  }, [isOpen]);
 
   const filteredDiagrams = diagrams.filter((diagram) => {
     const matchesSearch =
@@ -68,8 +66,6 @@ export function LoadDialog({
       minute: '2-digit',
     });
   };
-
-  if (!isOpen) return null;
 
   return (
     <div
@@ -207,5 +203,18 @@ export function LoadDialog({
         </div>
       </div>
     </div>
+  );
+}
+
+export function LoadDialog({ isOpen, onClose, onLoad, onDelete, diagrams }: LoadDialogProps) {
+  if (!isOpen) return null;
+
+  return (
+    <LoadDialogContent
+      onClose={onClose}
+      onLoad={onLoad}
+      onDelete={onDelete}
+      diagrams={diagrams}
+    />
   );
 }

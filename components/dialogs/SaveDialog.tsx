@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useDiagramStore } from '@/store/diagramStore';
 
 interface SaveDialogProps {
@@ -9,17 +9,21 @@ interface SaveDialogProps {
   onSave: (title: string, description: string, isDraft: boolean) => void;
 }
 
-export function SaveDialog({ isOpen, onClose, onSave }: SaveDialogProps) {
-  const { diagramTitle, diagramDescription } = useDiagramStore();
-  const [title, setTitle] = useState(diagramTitle);
-  const [description, setDescription] = useState(diagramDescription);
+interface SaveDialogContentProps {
+  initialTitle: string;
+  initialDescription: string;
+  onClose: () => void;
+  onSave: (title: string, description: string, isDraft: boolean) => void;
+}
 
-  useEffect(() => {
-    if (isOpen) {
-      setTitle(diagramTitle);
-      setDescription(diagramDescription);
-    }
-  }, [isOpen, diagramTitle, diagramDescription]);
+function SaveDialogContent({
+  initialTitle,
+  initialDescription,
+  onClose,
+  onSave,
+}: SaveDialogContentProps) {
+  const [title, setTitle] = useState(initialTitle);
+  const [description, setDescription] = useState(initialDescription);
 
   const handleSave = (isDraft: boolean) => {
     if (!title.trim()) {
@@ -30,15 +34,13 @@ export function SaveDialog({ isOpen, onClose, onSave }: SaveDialogProps) {
     onClose();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: ReactKeyboardEvent) => {
     if (e.key === 'Escape') {
       onClose();
     } else if (e.key === 'Enter' && e.ctrlKey) {
       handleSave(false);
     }
   };
-
-  if (!isOpen) return null;
 
   return (
     <div
@@ -107,5 +109,20 @@ export function SaveDialog({ isOpen, onClose, onSave }: SaveDialogProps) {
         </p>
       </div>
     </div>
+  );
+}
+
+export function SaveDialog({ isOpen, onClose, onSave }: SaveDialogProps) {
+  const { diagramTitle, diagramDescription } = useDiagramStore();
+
+  if (!isOpen) return null;
+
+  return (
+    <SaveDialogContent
+      initialTitle={diagramTitle}
+      initialDescription={diagramDescription}
+      onClose={onClose}
+      onSave={onSave}
+    />
   );
 }

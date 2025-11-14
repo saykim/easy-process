@@ -46,6 +46,7 @@ export default function Home() {
           loadDiagram(data.nodes || [], data.edges || []);
           alert('Diagram loaded successfully!');
         } catch (error) {
+          console.error('Failed to load diagram:', error);
           alert('Failed to load diagram. Invalid file format.');
         }
       };

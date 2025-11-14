@@ -96,7 +96,7 @@ export interface Version {
   diagramId: string;
   semver: string;
   message: string;
-  diff?: any;
+  diff?: Record<string, unknown>;
   createdBy: string;
   createdAt: Date;
 }
@@ -119,7 +119,7 @@ export interface AuditLog {
   action: string;
   entityType: string;
   entityId: string;
-  payload: any;
+  payload: Record<string, unknown>;
   at: Date;
 }
 

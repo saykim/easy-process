@@ -1,7 +1,7 @@
 'use client';
 
 import { NodeType, DeviceCategory } from '@/types';
-import { NODE_TYPES, DEVICE_CATEGORIES } from '@/lib/constants/nodes';
+import { DEVICE_CATEGORIES } from '@/lib/constants/nodes';
 
 interface PaletteItemProps {
   type: NodeType;

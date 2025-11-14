@@ -15,8 +15,8 @@ export function PropertiesPanel() {
   if (selectedEdge) {
     const edgeData = selectedEdge.data as CustomEdgeData;
 
-    const handleEdgeUpdate = (field: keyof CustomEdgeData, value: any) => {
-      updateEdgeData(selectedEdge.id, { [field]: value });
+    const handleEdgeUpdate = (field: keyof CustomEdgeData, value: string) => {
+      updateEdgeData(selectedEdge.id, { [field]: value } as Partial<CustomEdgeData>);
     };
 
     const handleEdgeDelete = () => {
@@ -125,9 +125,9 @@ export function PropertiesPanel() {
   }
 
   const nodeType = selectedNode.data.type;
-  const nodeProps = selectedNode.data.props as any;
+  const nodeProps = selectedNode.data.props;
 
-  const handleUpdate = (field: string, value: any) => {
+  const handleUpdate = (field: string, value: string) => {
     updateNodeData(selectedNode.id, {
       props: {
         ...nodeProps,
@@ -136,12 +136,13 @@ export function PropertiesPanel() {
     });
   };
 
-  const handleDeviceMetaUpdate = (field: string, value: any) => {
+  const handleDeviceMetaUpdate = (field: string, value: string) => {
     const deviceProps = nodeProps as DeviceNodeProps;
     updateNodeData(selectedNode.id, {
       props: {
-        ...nodeProps,
+        ...deviceProps,
         deviceMeta: {
+          category: deviceProps.deviceMeta?.category || 'xray',
           ...deviceProps.deviceMeta,
           [field]: value,
         },

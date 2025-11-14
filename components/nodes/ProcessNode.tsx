@@ -1,15 +1,15 @@
 'use client';
 
 import { Handle, Position, NodeResizer } from '@xyflow/react';
-import { CustomNodeData } from '@/types';
+import { CustomNodeData, BaseNodeProps } from '@/types';
 
-interface ProcessNodeProps {
+interface ProcessNodeComponentProps {
   data: CustomNodeData;
   selected?: boolean;
 }
 
-export function ProcessNode({ data, selected }: ProcessNodeProps) {
-  const nodeData = data.props as any;
+export function ProcessNode({ data, selected }: ProcessNodeComponentProps) {
+  const nodeData = data.props as BaseNodeProps;
 
   return (
     <>

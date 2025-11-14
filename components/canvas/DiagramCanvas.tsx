@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, useEffect, useMemo } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -9,8 +9,10 @@ import {
   Connection,
   ReactFlowProvider,
   Node,
+  Edge,
   useReactFlow,
   OnConnectStartParams,
+  OnConnectStart,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -23,7 +25,7 @@ import { CustomEdge } from '@/components/edges/CustomEdge';
 import { QuickNodeMenu } from '@/components/canvas/QuickNodeMenu';
 import { SaveDialog } from '@/components/dialogs/SaveDialog';
 import { LoadDialog } from '@/components/dialogs/LoadDialog';
-import { DeviceCategory, NodeType } from '@/types';
+import { DeviceCategory, NodeType, SavedDiagram } from '@/types';
 import { createNode } from '@/lib/utils/nodeFactory';
 import { exportDiagramAsImage, copyDiagramToClipboard } from '@/lib/utils/exportImage';
 
@@ -61,6 +63,12 @@ function DiagramCanvasInner() {
     selectedEdgeId,
     deleteNode,
     deleteEdge,
+    copyNode,
+    pasteNode,
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackward,
     saveDiagramToStorage,
     loadDiagramFromStorage,
     deleteDiagramFromStorage,
@@ -110,7 +118,7 @@ function DiagramCanvasInner() {
   );
 
   const onEdgeClick = useCallback(
-    (_event: React.MouseEvent, edge: any) => {
+    (_event: React.MouseEvent, edge: Edge) => {
       setSelectedEdgeId(edge.id);
     },
     [setSelectedEdgeId]
@@ -121,7 +129,7 @@ function DiagramCanvasInner() {
     setSelectedEdgeId(null);
   }, [setSelectedNodeId, setSelectedEdgeId]);
 
-  const onConnectStart = useCallback((_: any, params: OnConnectStartParams) => {
+  const onConnectStart: OnConnectStart = useCallback((_event, params) => {
     setConnectingNodeId(params);
   }, []);
 
@@ -199,7 +207,7 @@ function DiagramCanvasInner() {
     setConnectingNodeId(null);
   }, []);
 
-  // Handle Delete/Backspace key for deleting selected nodes/edges
+  // Handle keyboard shortcuts for copy/paste, delete, and layer ordering
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Don't handle if user is typing in an input
@@ -210,6 +218,51 @@ function DiagramCanvasInner() {
         return;
       }
 
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey;
+
+      // Copy: Ctrl+C / Cmd+C
+      if (ctrlOrCmd && event.key === 'c') {
+        event.preventDefault();
+        if (selectedNodeId) {
+          copyNode();
+        }
+      }
+
+      // Paste: Ctrl+V / Cmd+V
+      if (ctrlOrCmd && event.key === 'v') {
+        event.preventDefault();
+        pasteNode();
+      }
+
+      // Layer ordering shortcuts (only for nodes)
+      if (selectedNodeId) {
+        // Bring to Front: Ctrl+Shift+] / Cmd+Shift+]
+        if (ctrlOrCmd && event.shiftKey && event.key === ']') {
+          event.preventDefault();
+          bringToFront();
+        }
+
+        // Send to Back: Ctrl+Shift+[ / Cmd+Shift+[
+        if (ctrlOrCmd && event.shiftKey && event.key === '[') {
+          event.preventDefault();
+          sendToBack();
+        }
+
+        // Bring Forward: Ctrl+] / Cmd+]
+        if (ctrlOrCmd && !event.shiftKey && event.key === ']') {
+          event.preventDefault();
+          bringForward();
+        }
+
+        // Send Backward: Ctrl+[ / Cmd+[
+        if (ctrlOrCmd && !event.shiftKey && event.key === '[') {
+          event.preventDefault();
+          sendBackward();
+        }
+      }
+
+      // Delete: Delete/Backspace
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
 
@@ -223,7 +276,7 @@ function DiagramCanvasInner() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge]);
+  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge, copyNode, pasteNode, bringToFront, sendToBack, bringForward, sendBackward]);
 
   // Save/Load handlers
   const handleSave = useCallback(
@@ -264,7 +317,7 @@ function DiagramCanvasInner() {
   );
 
   // Fetch saved diagrams when load dialog opens
-  const [savedDiagrams, setSavedDiagrams] = useState<any[]>([]);
+  const [savedDiagrams, setSavedDiagrams] = useState<SavedDiagram[]>([]);
 
   useEffect(() => {
     if (showLoadDialog) {

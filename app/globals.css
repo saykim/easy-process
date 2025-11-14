@@ -156,3 +156,12 @@
     margin: 1cm;
   }
 }
+
+/* ReactFlow: Make edges render above nodes */
+.react-flow__edges {
+  z-index: 1000 !important;
+}
+
+.react-flow__nodes {
+  z-index: 999 !important;
+}

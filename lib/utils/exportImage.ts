@@ -1,6 +1,36 @@
 import html2canvas from 'html2canvas';
 
 /**
+ * Get the React Flow viewport element for capturing
+ * @returns The viewport element
+ * @throws Error if viewport or container not found
+ */
+function getReactFlowViewport(): HTMLElement {
+  const element = document.querySelector('.react-flow__viewport') as HTMLElement;
+
+  if (!element) {
+    throw new Error('React Flow viewport not found');
+  }
+
+  const container = element.closest('.react-flow') as HTMLElement;
+
+  if (!container) {
+    throw new Error('React Flow container not found');
+  }
+
+  return element;
+}
+
+/**
+ * Capture the React Flow diagram as a canvas
+ * @returns The captured canvas
+ */
+async function captureReactFlowCanvas(): Promise<HTMLCanvasElement> {
+  const element = getReactFlowViewport();
+  return await html2canvas(element);
+}
+
+/**
  * Export the React Flow diagram as a PNG image
  * @param elementId - The ID of the element to capture (default: react-flow container)
  * @param filename - The filename for the downloaded image
@@ -10,22 +40,7 @@ export async function exportDiagramAsImage(
   filename: string = 'process-diagram.png'
 ): Promise<void> {
   try {
-    // Find the React Flow viewport element
-    const element = document.querySelector('.react-flow__viewport') as HTMLElement;
-
-    if (!element) {
-      throw new Error('React Flow viewport not found');
-    }
-
-    // Get the parent container to determine dimensions
-    const container = element.closest('.react-flow') as HTMLElement;
-
-    if (!container) {
-      throw new Error('React Flow container not found');
-    }
-
-    // Capture the canvas with high quality settings
-    const canvas = await html2canvas(element);
+    const canvas = await captureReactFlowCanvas();
 
     // Convert canvas to blob and download
     canvas.toBlob((blob) => {
@@ -54,19 +69,7 @@ export async function exportDiagramAsImage(
  */
 export async function copyDiagramToClipboard(): Promise<void> {
   try {
-    const element = document.querySelector('.react-flow__viewport') as HTMLElement;
-
-    if (!element) {
-      throw new Error('React Flow viewport not found');
-    }
-
-    const container = element.closest('.react-flow') as HTMLElement;
-
-    if (!container) {
-      throw new Error('React Flow container not found');
-    }
-
-    const canvas = await html2canvas(element);
+    const canvas = await captureReactFlowCanvas();
 
     // Convert canvas to blob
     canvas.toBlob(async (blob) => {

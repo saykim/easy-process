@@ -13,6 +13,8 @@ import {
   useReactFlow,
   OnConnectStartParams,
   OnConnectStart,
+  type NodeTypes,
+  type EdgeTypes,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -29,14 +31,14 @@ import { DeviceCategory, NodeType, SavedDiagram } from '@/types';
 import { createNode } from '@/lib/utils/nodeFactory';
 import { exportDiagramAsImage, copyDiagramToClipboard } from '@/lib/utils/exportImage';
 
-const nodeTypes = {
+const nodeTypes: NodeTypes = {
   process: ProcessNode,
   device: DeviceNode,
   decision: DecisionNode,
   note: NoteNode,
 } as const;
 
-const edgeTypes = {
+const edgeTypes: EdgeTypes = {
   default: CustomEdge,
 } as const;
 
@@ -65,6 +67,8 @@ function DiagramCanvasInner() {
     deleteEdge,
     copyNode,
     pasteNode,
+    copyEdge,
+    pasteEdge,
     bringToFront,
     sendToBack,
     bringForward,
@@ -226,6 +230,8 @@ function DiagramCanvasInner() {
         event.preventDefault();
         if (selectedNodeId) {
           copyNode();
+        } else if (selectedEdgeId) {
+          copyEdge();
         }
       }
 
@@ -233,6 +239,7 @@ function DiagramCanvasInner() {
       if (ctrlOrCmd && event.key === 'v') {
         event.preventDefault();
         pasteNode();
+        pasteEdge();
       }
 
       // Layer ordering shortcuts (only for nodes)
@@ -276,7 +283,20 @@ function DiagramCanvasInner() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge, copyNode, pasteNode, bringToFront, sendToBack, bringForward, sendBackward]);
+  }, [
+    selectedNodeId,
+    selectedEdgeId,
+    deleteNode,
+    deleteEdge,
+    copyNode,
+    pasteNode,
+    copyEdge,
+    pasteEdge,
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackward,
+  ]);
 
   // Save/Load handlers
   const handleSave = useCallback(
@@ -330,7 +350,7 @@ function DiagramCanvasInner() {
     setIsExporting(true);
     try {
       const title = nodes.length > 0 ? '프로세스-다이어그램' : 'empty-diagram';
-      await exportDiagramAsImage('diagram-canvas', `${title}.png`);
+      await exportDiagramAsImage(`${title}.png`);
       alert('이미지가 다운로드되었습니다!');
     } catch (error) {
       alert('이미지 내보내기에 실패했습니다.');
@@ -424,8 +444,8 @@ function DiagramCanvasInner() {
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
-        nodeTypes={nodeTypes as any}
-        edgeTypes={edgeTypes as any}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         snapToGrid
         snapGrid={[15, 15]}

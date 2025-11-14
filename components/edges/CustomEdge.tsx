@@ -1,6 +1,13 @@
 'use client';
 
-import { BaseEdge, EdgeProps, getSmoothStepPath, EdgeLabelRenderer } from '@xyflow/react';
+import {
+  BaseEdge,
+  EdgeProps,
+  getSmoothStepPath,
+  EdgeLabelRenderer,
+  getStraightPath,
+  Position,
+} from '@xyflow/react';
 import { CustomEdgeData } from '@/types';
 import { EDGE_STYLES } from '@/lib/constants/edges';
 
@@ -17,14 +24,26 @@ export function CustomEdge({
   markerEnd,
   markerStart,
 }: EdgeProps) {
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-  });
+  const isVerticalHandle =
+    (sourcePosition === Position.Top || sourcePosition === Position.Bottom) &&
+    (targetPosition === Position.Top || targetPosition === Position.Bottom);
+  const isHorizontalHandle =
+    (sourcePosition === Position.Left || sourcePosition === Position.Right) &&
+    (targetPosition === Position.Left || targetPosition === Position.Right);
+
+  const alignedVertically = isVerticalHandle && Math.abs(sourceX - targetX) <= 4;
+  const alignedHorizontally = isHorizontalHandle && Math.abs(sourceY - targetY) <= 4;
+
+  const [edgePath, labelX, labelY] = (alignedVertically || alignedHorizontally)
+    ? getStraightPath({ sourceX, sourceY, targetX, targetY })
+    : getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+      });
 
   const edgeData = (data as CustomEdgeData) || { style: 'solid', color: '#6b7280', arrowType: 'forward' };
   const edgeStyle = EDGE_STYLES[edgeData.style || 'solid'];

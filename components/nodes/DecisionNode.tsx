@@ -20,12 +20,11 @@ export function DecisionNode({ data, selected }: DecisionNodeComponentProps) {
         minHeight={150}
       />
       <div className="relative w-full h-full" style={{ minWidth: '150px', minHeight: '150px' }}>
-      {/* Diamond shape - transparent background to allow edges to show through */}
+      {/* Diamond shape */}
       <div
-        className={`absolute inset-0 transform rotate-45 shadow-md border-2 ${
+        className={`absolute inset-0 transform rotate-45 shadow-md bg-yellow-50 border-2 ${
           selected ? 'border-yellow-500' : 'border-yellow-400'
         }`}
-        style={{ backgroundColor: 'transparent' }}
       />
 
       {/* Handles */}
@@ -54,9 +53,9 @@ export function DecisionNode({ data, selected }: DecisionNodeComponentProps) {
         className="w-3 h-3 !bg-yellow-500"
       />
 
-      {/* Content (not rotated) - with background for readability */}
+      {/* Content (not rotated) */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center px-3 py-2 max-w-[100px] bg-yellow-50 rounded shadow-sm">
+        <div className="text-center px-2 max-w-[100px]">
           <div className="font-semibold text-gray-900 text-sm break-words whitespace-pre-wrap">
             {nodeData?.name || nodeData?.condition || 'Decision?'}
           </div>

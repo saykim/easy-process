@@ -128,7 +128,7 @@ function DiagramCanvasInner() {
     setSelectedEdgeId(null);
   }, [setSelectedNodeId, setSelectedEdgeId]);
 
-  const onConnectStart = useCallback((_event: React.MouseEvent | React.TouchEvent, params: OnConnectStartParams) => {
+  const onConnectStart = useCallback((_event, params: OnConnectStartParams) => {
     setConnectingNodeId(params);
   }, []);
 

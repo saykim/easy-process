@@ -22,6 +22,7 @@ interface DiagramState {
 
   // Clipboard
   copiedNode: Node<CustomNodeData> | null;
+  copiedEdge: Edge<CustomEdgeData> | null;
 
   // Actions
   setDiagramType: (type: DiagramType) => void;
@@ -36,6 +37,8 @@ interface DiagramState {
   deleteNode: (nodeId: string) => void;
   copyNode: () => void;
   pasteNode: () => void;
+  copyEdge: () => void;
+  pasteEdge: () => void;
   bringToFront: () => void;
   sendToBack: () => void;
   bringForward: () => void;
@@ -74,6 +77,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   selectedNodeId: null,
   selectedEdgeId: null,
   copiedNode: null,
+  copiedEdge: null,
 
   // Diagram metadata actions
   setDiagramType: (type) => set({ diagramType: type }),
@@ -121,7 +125,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
 
     const nodeToCopy = nodes.find((node) => node.id === selectedNodeId);
     if (nodeToCopy) {
-      set({ copiedNode: nodeToCopy });
+      set({ copiedNode: nodeToCopy, copiedEdge: null });
     }
   },
 
@@ -143,6 +147,34 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
     set({
       nodes: [...nodes, newNode],
       selectedNodeId: newNode.id,
+      selectedEdgeId: null,
+    });
+  },
+
+  copyEdge: () => {
+    const { selectedEdgeId, edges } = get();
+    if (!selectedEdgeId) return;
+
+    const edgeToCopy = edges.find((edge) => edge.id === selectedEdgeId);
+    if (edgeToCopy) {
+      set({ copiedEdge: edgeToCopy, copiedNode: null });
+    }
+  },
+
+  pasteEdge: () => {
+    const { copiedEdge, edges } = get();
+    if (!copiedEdge) return;
+
+    const newEdge: Edge<CustomEdgeData> = {
+      ...copiedEdge,
+      id: generateEdgeId(),
+      selected: false,
+    };
+
+    set({
+      edges: [...edges, newEdge],
+      selectedEdgeId: newEdge.id,
+      selectedNodeId: null,
     });
   },
 

@@ -67,6 +67,8 @@ function DiagramCanvasInner() {
     deleteEdge,
     copyNode,
     pasteNode,
+    copyEdge,
+    pasteEdge,
     bringToFront,
     sendToBack,
     bringForward,
@@ -228,6 +230,8 @@ function DiagramCanvasInner() {
         event.preventDefault();
         if (selectedNodeId) {
           copyNode();
+        } else if (selectedEdgeId) {
+          copyEdge();
         }
       }
 
@@ -235,6 +239,7 @@ function DiagramCanvasInner() {
       if (ctrlOrCmd && event.key === 'v') {
         event.preventDefault();
         pasteNode();
+        pasteEdge();
       }
 
       // Layer ordering shortcuts (only for nodes)
@@ -278,7 +283,20 @@ function DiagramCanvasInner() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge, copyNode, pasteNode, bringToFront, sendToBack, bringForward, sendBackward]);
+  }, [
+    selectedNodeId,
+    selectedEdgeId,
+    deleteNode,
+    deleteEdge,
+    copyNode,
+    pasteNode,
+    copyEdge,
+    pasteEdge,
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackward,
+  ]);
 
   // Save/Load handlers
   const handleSave = useCallback(

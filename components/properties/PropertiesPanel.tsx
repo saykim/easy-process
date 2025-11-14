@@ -15,10 +15,7 @@ export function PropertiesPanel() {
   if (selectedEdge) {
     const edgeData = selectedEdge.data as CustomEdgeData;
 
-    const handleEdgeUpdate = <K extends keyof CustomEdgeData>(
-      field: K,
-      value: CustomEdgeData[K]
-    ) => {
+    const handleEdgeUpdate = (field: keyof CustomEdgeData, value: string) => {
       updateEdgeData(selectedEdge.id, { [field]: value } as Partial<CustomEdgeData>);
     };
 

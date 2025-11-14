@@ -1,7 +1,7 @@
 'use client';
 
 import { Handle, Position, NodeResizer } from '@xyflow/react';
-import { CustomNodeData } from '@/types';
+import { CustomNodeData, BaseNodeProps } from '@/types';
 
 interface NoteNodeComponentProps {
   data: CustomNodeData;
@@ -9,7 +9,7 @@ interface NoteNodeComponentProps {
 }
 
 export function NoteNode({ data, selected }: NoteNodeComponentProps) {
-  const nodeData = data.props as any;
+  const nodeData = data.props as BaseNodeProps;
 
   return (
     <>

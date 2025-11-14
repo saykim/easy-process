@@ -61,6 +61,8 @@ function DiagramCanvasInner() {
     selectedEdgeId,
     deleteNode,
     deleteEdge,
+    copyNode,
+    pasteNode,
     saveDiagramToStorage,
     loadDiagramFromStorage,
     deleteDiagramFromStorage,
@@ -199,7 +201,7 @@ function DiagramCanvasInner() {
     setConnectingNodeId(null);
   }, []);
 
-  // Handle Delete/Backspace key for deleting selected nodes/edges
+  // Handle keyboard shortcuts for copy/paste and delete
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Don't handle if user is typing in an input
@@ -210,6 +212,24 @@ function DiagramCanvasInner() {
         return;
       }
 
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey;
+
+      // Copy: Ctrl+C / Cmd+C
+      if (ctrlOrCmd && event.key === 'c') {
+        event.preventDefault();
+        if (selectedNodeId) {
+          copyNode();
+        }
+      }
+
+      // Paste: Ctrl+V / Cmd+V
+      if (ctrlOrCmd && event.key === 'v') {
+        event.preventDefault();
+        pasteNode();
+      }
+
+      // Delete: Delete/Backspace
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
 
@@ -223,7 +243,7 @@ function DiagramCanvasInner() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge]);
+  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge, copyNode, pasteNode]);
 
   // Save/Load handlers
   const handleSave = useCallback(

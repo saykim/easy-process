@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Node, Edge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Connection } from '@xyflow/react';
 import { CustomNodeData, CustomEdgeData, DiagramType, EdgeStyle, SavedDiagram } from '@/types';
 import { DEFAULT_EDGE_STYLE, DEFAULT_EDGE_COLOR, DEFAULT_EDGE_ARROW_TYPE } from '@/lib/constants/edges';
-import { generateEdgeId } from '@/lib/utils/idGenerator';
+import { generateEdgeId, generateNodeId } from '@/lib/utils/idGenerator';
 import { saveDiagram, getDiagram, deleteDiagram, getAllDiagrams } from '@/lib/utils/storage';
 
 interface DiagramState {
@@ -20,6 +20,9 @@ interface DiagramState {
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
 
+  // Clipboard
+  copiedNode: Node<CustomNodeData> | null;
+
   // Actions
   setDiagramType: (type: DiagramType) => void;
   setDiagramTitle: (title: string) => void;
@@ -31,6 +34,8 @@ interface DiagramState {
   addNode: (node: Node<CustomNodeData>) => void;
   updateNodeData: (nodeId: string, data: Partial<CustomNodeData>) => void;
   deleteNode: (nodeId: string) => void;
+  copyNode: () => void;
+  pasteNode: () => void;
 
   // Edge actions
   setEdges: (edges: Edge<CustomEdgeData>[]) => void;
@@ -64,6 +69,7 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
   edges: [],
   selectedNodeId: null,
   selectedEdgeId: null,
+  copiedNode: null,
 
   // Diagram metadata actions
   setDiagramType: (type) => set({ diagramType: type }),
@@ -102,6 +108,37 @@ export const useDiagramStore = create<DiagramState>((set, get) => ({
         (edge) => edge.source !== nodeId && edge.target !== nodeId
       ),
       selectedNodeId: get().selectedNodeId === nodeId ? null : get().selectedNodeId,
+    });
+  },
+
+  copyNode: () => {
+    const { selectedNodeId, nodes } = get();
+    if (!selectedNodeId) return;
+
+    const nodeToCopy = nodes.find((node) => node.id === selectedNodeId);
+    if (nodeToCopy) {
+      set({ copiedNode: nodeToCopy });
+    }
+  },
+
+  pasteNode: () => {
+    const { copiedNode, nodes } = get();
+    if (!copiedNode) return;
+
+    // Create new node with offset position and new ID
+    const newNode: Node<CustomNodeData> = {
+      ...copiedNode,
+      id: generateNodeId(),
+      position: {
+        x: copiedNode.position.x + 50,
+        y: copiedNode.position.y + 50,
+      },
+      selected: false,
+    };
+
+    set({
+      nodes: [...nodes, newNode],
+      selectedNodeId: newNode.id,
     });
   },
 
